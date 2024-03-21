@@ -17,11 +17,15 @@ def getImgs(pinUrl):
     assert img
     return img
 
-url = "https://www.pinterest.co.uk/btgchf2/test/"
+url = input("input pinterest board url: ")
+print("scraping image urls...")
 pinsUrls = getPinUrls(url)
 imgs = (list(map(getImgs, pinsUrls)))
+print(f"downloading {len(imgs)} images...")
 
 for img in imgs:
     img_data = requests.get(img["src"]).content
     with open(f'output/{img["alt"].replace(" ", "-")}.jpg', 'wb') as handler:
         handler.write(img_data)
+
+print(f"Done!")
