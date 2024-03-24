@@ -3,7 +3,6 @@ import time
 import requests
 from requests.exceptions import ConnectionError
 import os
-from reportlab.pdfgen import canvas
 
 
 countrSkip = 0
@@ -63,22 +62,5 @@ for i, pin in enumerate(board_pins):
         download_image(url, download_dir + url.rsplit('/', 1)[-1])
 
 print("Done downloading   ")
-
 print("Existing files:" + str(countrSkip))
 print("New files:" + str(countrDnld))
-
-
-# generate pdf
-def gen_pdf():
-    c = canvas.Canvas('output.pdf')
-
-    for filename in os.listdir("output/"):
-        if not filename.endswith(".jpg") and not filename.endswith(".png"):
-            continue
-        c.drawImage(f'output/{filename}', 0, 0, 595, 842, preserveAspectRatio=True)
-        c.showPage()
-
-    c.save()
-
-gen_pdf()
-print("Done! generated pdf")
