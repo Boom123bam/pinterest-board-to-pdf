@@ -43,6 +43,9 @@ def drawLinkBox(filename, x, y):
 i = 0
 page = 0
 
+if not os.path.exists("grid"):
+    os.makedirs("grid")
+
 while i < len(imgs):
     grid_image = Image.new("RGB", (pdf_width, pdf_height))
     for y in range(rows):
@@ -51,11 +54,10 @@ while i < len(imgs):
                 drawLinkBox(imgs[i], x,y)
                 drawImg(f'output/{imgs[i]}', grid_image,x,y)
                 i += 1
-    grid_image.save(f"grid-{page}.jpg")
-    c.drawImage(f"grid-{page}.jpg", 0, 0, pdf_width, pdf_height)
+    grid_image.save(f"grid/grid-{page}.jpg")
+    c.drawImage(f"grid/grid-{page}.jpg", 0, 0, pdf_width, pdf_height)
     c.showPage()
     page += 1
-    # put on page1
 
 
 for filename in imgs:
