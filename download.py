@@ -13,7 +13,7 @@ if not os.path.exists(download_dir):
 
 pinterest = Pinterest()
 
-boards = pinterest.boards(username=input("input username: "))
+boards = pinterest.boards_all(username=input("input username: "))
 for i, board in enumerate(boards):
     print(f"{i}: {board['name']}")
 
