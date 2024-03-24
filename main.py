@@ -50,17 +50,22 @@ def download_image(url, path):
                     time.sleep(1)
         if r.status_code == 200:
             countrDnld += 1
-            print("Downloading " + url)
             with open(path, 'wb') as f:
                 for chunk in r.iter_content(1024):
                     f.write(chunk)
 
 
 # download each pin image in the specified directory
-for pin in board_pins:
+for i, pin in enumerate(board_pins):
     if 'images' in pin:
         url = pin['images']['orig']['url']
+        print(f"downloading: {i}/{len(board_pins)} ", end="\r")
         download_image(url, download_dir + url.rsplit('/', 1)[-1])
+
+print("Done downloading   ")
+
+print("Existing files:" + str(countrSkip))
+print("New files:" + str(countrDnld))
 
 
 # generate pdf
@@ -76,3 +81,4 @@ def gen_pdf():
     c.save()
 
 gen_pdf()
+print("Done! generated pdf")
