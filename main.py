@@ -1,48 +1,78 @@
+from py3pin.Pinterest import Pinterest
+import time
 import requests
-from bs4 import BeautifulSoup
-import json
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch, cm
+from requests.exceptions import ConnectionError
 import os
+from reportlab.pdfgen import canvas
 
-def getPinUrls(boardUrl) -> list:
-    response = requests.get(boardUrl)
-    soup = BeautifulSoup(response.content, "html.parser")
-    div = soup.find('script', {"type": "application/ld+json"})
-    assert div
-    items = json.loads(div.text)['itemListElement']
-    return list(map(lambda i:i["url"], items))
 
-def getImgs(pinUrl):
-    response = requests.get(pinUrl)
-    soup = BeautifulSoup(response.content, "html.parser")
-    img =  soup.find("img")
-    assert img
-    return img
+countrSkip = 0
+countrDnld = 0
+download_dir = './output/'
+if not os.path.exists(download_dir):
+    os.makedirs(download_dir)
 
+pinterest = Pinterest()
+
+boards = pinterest.boards(username=input("input username: "))
+for i, board in enumerate(boards):
+    print(f"{i}: {board['name']}")
+
+board = boards[int(input("input index: "))]
+
+# get all pins for the board
+board_pins = []
+pin_batch = pinterest.board_feed(board_id=board['id'])
+
+while len(pin_batch) > 0:
+    board_pins += pin_batch
+    pin_batch = pinterest.board_feed(board_id=board['id'])
+
+
+# this can download images by url
+def download_image(url, path):
+    global countrSkip
+    global countrDnld
+    if os.path.isfile(path):
+        countrSkip += 1
+    else:
+        nb_tries = 10
+        while True:
+            nb_tries -= 1
+            try:
+                # Request url
+                r = requests.get(url=url, stream=True)
+                break
+            except ConnectionError as err:
+                if nb_tries == 0:
+                    raise err
+                else:
+                    time.sleep(1)
+        if r.status_code == 200:
+            countrDnld += 1
+            print("Downloading " + url)
+            with open(path, 'wb') as f:
+                for chunk in r.iter_content(1024):
+                    f.write(chunk)
+
+
+# download each pin image in the specified directory
+for pin in board_pins:
+    if 'images' in pin:
+        url = pin['images']['orig']['url']
+        download_image(url, download_dir + url.rsplit('/', 1)[-1])
+
+
+# generate pdf
 def gen_pdf():
     c = canvas.Canvas('output.pdf')
 
     for filename in os.listdir("output/"):
         if not filename.endswith(".jpg") and not filename.endswith(".png"):
             continue
-        print("writing:", filename)
         c.drawImage(f'output/{filename}', 0, 0, 595, 842, preserveAspectRatio=True)
         c.showPage()
 
     c.save()
 
-url = input("input pinterest board url: ")
-print("scraping image urls...")
-pinsUrls = getPinUrls(url)
-imgs = (list(map(getImgs, pinsUrls)))
-print(f"downloading {len(imgs)} images...")
-
-for img in imgs:
-    img_data = requests.get(img["src"]).content
-    with open(f'output/{img["alt"].replace(" ", "-")}.jpg', 'wb') as handler:
-        handler.write(img_data)
-
-print("generating pdf...")
 gen_pdf()
-print(f"Done!")
