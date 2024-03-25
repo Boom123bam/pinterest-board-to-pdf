@@ -1,25 +1,65 @@
-from PIL import Image
-
-def cropAr(targetAr, img:Image.Image):
-    w, h = img.size
-    imgAr = w/h
-    if imgAr > targetAr:
-        widthDiff = w * (1 - targetAr/imgAr)
-        return img.crop((0 + widthDiff / 2, 0, w - widthDiff / 2, h))
-    else:
-        heightDiff = h * (1 - imgAr/targetAr)
-        return img.crop((0, 0 + heightDiff / 2, w, h - heightDiff / 2))
+numImgs = 18
+rows = 3
+cols = 4
 
 
-def drawImg(imgPath, imgTo, x, y, w, h):
-    img = Image.open(imgPath)
-    img = cropAr(w/h, img).resize((w, h))
-    imgTo.paste(img, (x, y))
 
-grid_image = Image.new("RGB", (400, 400))
-drawImg("1.jpg", grid_image, 0, 0, 200, 200)
-drawImg("2.jpg", grid_image, 200, 0, 200, 200)
-drawImg("3.jpg", grid_image, 0, 200, 200, 200)
-drawImg("4.jpg", grid_image, 200, 200, 200, 200)
+pdf_width = 595
+pdf_height = 842
 
-grid_image.save("combined_grid.jpg")
+import math
+w = math.ceil(pdf_width/cols)
+h = math.ceil(pdf_height/rows)
+
+from pypdf import PdfReader, PdfWriter
+from pypdf.annotations import Link
+import os
+
+pdf_path = os.path.join("output.pdf")
+reader = PdfReader(pdf_path)
+writer = PdfWriter(clone_from=reader)
+
+numIndexPages = math.ceil(numImgs/(rows*cols))
+
+def drawLinkBox(page_number, target_page_index, x, y):
+    xPos = math.floor(x/cols * pdf_width)
+    yPos = math.floor((1 - y/rows) * pdf_height)
+    annotation = Link(
+        rect=(xPos, yPos - h, xPos+w, yPos), target_page_index=target_page_index
+    )
+    writer.add_annotation(page_number, annotation=annotation)
+
+    #good
+    # annotation = Link(
+    #     rect=(50, 500, 700, 650), target_page_index=3
+    # )
+    #bad
+    # annotation = Link(
+    #     rect=(0.0, 842.0, 148.75, 561.3333333333333), target_page_index=3
+    # )
+    #bad
+    # annotation = Link(
+    #     rect=(0, 842, 148, 561), target_page_index=3
+    # )
+    #good
+    # annotation = Link(
+    #     rect=(0, 561, 148, 842), target_page_index=3
+    # )
+
+
+i = 0
+page = 0
+while i < numImgs:
+    for y in range(rows):
+        for x in range(cols):
+            if i < numImgs:
+                drawLinkBox(page, i + numIndexPages, x,y)
+                i += 1
+    page += 1
+
+
+with open("annotated-pdf.pdf", "wb") as fp:
+    writer.write(fp)
+
+
+# print("Done! generated pdf")
