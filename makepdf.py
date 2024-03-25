@@ -18,17 +18,9 @@ def cropAr(targetAr, img:Image.Image):
 
 
 def drawImg(imgPath, imgTo, x, y):
-    xPos = int(x/cols * pdf_width)
-    yPos = int(y/rows * pdf_height)
     img = Image.open(imgPath)
-    img = cropAr(w/h, img).resize((math.ceil(w), math.ceil(h)))
-    imgTo.paste(img, (xPos, yPos))
-
-
-def drawLinkBox(filename, x, y):
-    xPos = x/cols * pdf_width
-    yPos = (1 - y/rows) * pdf_height
-    c.linkAbsolute(filename,filename, (xPos, yPos, xPos+w, yPos-h))
+    img = cropAr(w/h, img).resize((w, h))
+    imgTo.paste(img, (x, y))
 
 
 def makeContentsGrid():
@@ -39,10 +31,14 @@ def makeContentsGrid():
 
     while i < len(imgs):
         grid_image = Image.new("RGB", (pdf_width, pdf_height))
-        for y in range(rows):
-            for x in range(cols):
+        for row in range(rows):
+            for col in range(cols):
                 if i < len(imgs):
-                    drawLinkBox(imgs[i], x,y)
+                    x = int(col/cols * pdf_width)
+                    y = int(row/rows * pdf_height)
+                    # from bl
+                    c.linkAbsolute("",imgs[i], (x, pdf_height-y-h, x+w, pdf_height-y))
+                    # from tl
                     drawImg(f'output/{imgs[i]}', grid_image,x,y)
                     i += 1
         grid_image.save(f"grid/grid-{page}.jpg")
@@ -54,13 +50,13 @@ def makeContentsGrid():
 pdf_width = 595
 pdf_height = 842
 
-w = pdf_width/cols
-h = pdf_height/(rows)
+w = math.ceil(pdf_width/cols)
+h = math.ceil(pdf_height/rows)
 
 c = canvas.Canvas('output.pdf')
 imgs = [filename for filename in os.listdir("output/") if filename.endswith(".jpg") or filename.endswith(".png")]
 
-# makeContentsGrid()
+makeContentsGrid()
 
 for filename in imgs:
     c.bookmarkPage(filename)
