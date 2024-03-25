@@ -1,19 +1,10 @@
+import math
 from reportlab.pdfgen import canvas
 import os
 from PIL import Image
 
-
 rows = 9
 cols = 8
-
-pdf_width = 595
-pdf_height = 842
-
-w = pdf_width/cols
-h = pdf_height/(rows)
-
-c = canvas.Canvas('output.pdf')
-imgs = [filename for filename in os.listdir("output/") if filename.endswith(".jpg") or filename.endswith(".png")]
 
 def cropAr(targetAr, img:Image.Image):
     w, h = img.size
@@ -30,7 +21,7 @@ def drawImg(imgPath, imgTo, x, y):
     xPos = int(x/cols * pdf_width)
     yPos = int(y/rows * pdf_height)
     img = Image.open(imgPath)
-    img = cropAr(w/h, img).resize((int(w), int(h)))
+    img = cropAr(w/h, img).resize((math.ceil(w), math.ceil(h)))
     imgTo.paste(img, (xPos, yPos))
 
 
@@ -40,25 +31,36 @@ def drawLinkBox(filename, x, y):
     c.linkAbsolute(filename,filename, (xPos, yPos, xPos+w, yPos-h))
 
 
-i = 0
-page = 0
+def makeContentsGrid():
+    i = 0
+    page = 0
+    if not os.path.exists("grid"):
+        os.makedirs("grid")
 
-if not os.path.exists("grid"):
-    os.makedirs("grid")
+    while i < len(imgs):
+        grid_image = Image.new("RGB", (pdf_width, pdf_height))
+        for y in range(rows):
+            for x in range(cols):
+                if i < len(imgs):
+                    drawLinkBox(imgs[i], x,y)
+                    drawImg(f'output/{imgs[i]}', grid_image,x,y)
+                    i += 1
+        grid_image.save(f"grid/grid-{page}.jpg")
+        c.drawImage(f"grid/grid-{page}.jpg", 0, 0, pdf_width, pdf_height)
+        c.showPage()
+        page += 1
 
-while i < len(imgs):
-    grid_image = Image.new("RGB", (pdf_width, pdf_height))
-    for y in range(rows):
-        for x in range(cols):
-            if i < len(imgs):
-                drawLinkBox(imgs[i], x,y)
-                drawImg(f'output/{imgs[i]}', grid_image,x,y)
-                i += 1
-    grid_image.save(f"grid/grid-{page}.jpg")
-    c.drawImage(f"grid/grid-{page}.jpg", 0, 0, pdf_width, pdf_height)
-    c.showPage()
-    page += 1
 
+pdf_width = 595
+pdf_height = 842
+
+w = pdf_width/cols
+h = pdf_height/(rows)
+
+c = canvas.Canvas('output.pdf')
+imgs = [filename for filename in os.listdir("output/") if filename.endswith(".jpg") or filename.endswith(".png")]
+
+# makeContentsGrid()
 
 for filename in imgs:
     c.bookmarkPage(filename)
