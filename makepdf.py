@@ -3,8 +3,8 @@ from reportlab.pdfgen import canvas
 import os
 from PIL import Image
 
-rows = 3
-cols = 4
+rows = 9
+cols = 8
 
 def cropAr(targetAr, img:Image.Image):
     w, h = img.size
@@ -19,13 +19,8 @@ def cropAr(targetAr, img:Image.Image):
 
 def drawImg(imgPath, imgTo, x, y):
     img = Image.open(imgPath)
-<<<<<<< HEAD
-    img = cropAr(w/h, img).resize((math.ceil(w), math.ceil(h)))
-    imgTo.paste(img, (xPos, yPos))
-=======
     img = cropAr(w/h, img).resize((w, h))
     imgTo.paste(img, (x, y))
->>>>>>> Fix
 
 
 def makeContentsGrid():
@@ -34,7 +29,7 @@ def makeContentsGrid():
     if not os.path.exists("grid"):
         os.makedirs("grid")
 
-    while i < numImgs:
+    while i < len(imgs):
         grid_image = Image.new("RGB", (pdf_width, pdf_height))
         for row in range(rows):
             for col in range(cols):
@@ -60,7 +55,6 @@ h = math.ceil(pdf_height/rows)
 
 c = canvas.Canvas('output.pdf')
 imgs = [filename for filename in os.listdir("output/") if filename.endswith(".jpg") or filename.endswith(".png")]
-numImgs = len(imgs)
 
 makeContentsGrid()
 
@@ -72,40 +66,5 @@ for filename in imgs:
     c.showPage()
 
 c.save()
-
-
-
-from pypdf import PdfReader, PdfWriter
-from pypdf.annotations import Link
-import os
-
-pdf_path = os.path.join("output.pdf")
-reader = PdfReader(pdf_path)
-writer = PdfWriter(clone_from=reader)
-
-numIndexPages = math.ceil(numImgs/(rows*cols))
-
-def drawLinkBox(page_number, target_page_index, x, y):
-    xPos = x/cols * pdf_width
-    yPos = (1 - y/rows) * pdf_height
-    annotation = Link(
-        rect=(xPos, yPos, xPos+w, yPos-h), target_page_index=target_page_index
-    )
-    writer.add_annotation(page_number, annotation=annotation)
-
-i = 0
-page = 0
-while i < numImgs:
-    for y in range(rows):
-        for x in range(cols):
-            if i < numImgs:
-                drawLinkBox(page, i + numIndexPages, x,y)
-                i += 1
-    page += 1
-
-
-with open("output.pdf", "wb") as fp:
-    writer.write(fp)
-
 
 print("Done! generated pdf")
