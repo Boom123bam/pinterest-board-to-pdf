@@ -8,7 +8,7 @@ I use it to compile reference images to a PDF so I can view it on my kindle
 
 1. Clone the repo and install all dependencies with pip/pip3
 
-2. Run the download script, it will download images into the /output directory so you can do this for multiple boards to combine them into one pdf
+2. Run the download script, it will ask for a link to the board and download images into the /output directory so you can do this for multiple boards to combine them into one pdf
 
 ```
 python3 download.py
