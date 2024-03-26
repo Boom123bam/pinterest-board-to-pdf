@@ -13,11 +13,21 @@ if not os.path.exists(download_dir):
 
 pinterest = Pinterest()
 
-boards = pinterest.boards_all(username=input("input username: "))
-for i, board in enumerate(boards):
-    print(f"{i}: {board['name']}")
+url = input("input board url: ")
+if url.endswith("/"):
+  url = url[:-1]
+parts = url.split("/")
+username = parts[-2]
+boardname = parts[-1]
 
-board = boards[int(input("input index: "))]
+board = None
+boards = pinterest.boards_all(username)
+for i, b in enumerate(boards):
+    print(b['name'], boardname)
+    if b['name'] == boardname:
+        board = b
+
+assert board, "board not found"
 
 # get all pins for the board
 board_pins = []
