@@ -23,8 +23,7 @@ boardname = parts[-1]
 board = None
 boards = pinterest.boards_all(username)
 for i, b in enumerate(boards):
-    print(b['name'], boardname)
-    if b['name'] == boardname:
+    if b['name'] == boardname or b['name'] == boardname.replace("-", " "):
         board = b
 
 assert board, "board not found"
