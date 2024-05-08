@@ -14,7 +14,9 @@ I use it to compile reference images to a PDF so I can view it on my kindle
 python3 download.py
 ```
 
-3. Run the makepdf script, it will use all the images in the /output directory to make a pdf called output.pdf
+3. Optional - if you want to view on kindle, you may want to run normalize.py to brighten the dark images so that they are easier to see
+
+4. Run the makepdf script, it will use all the images in the /output directory to make a pdf called output.pdf
 
 ```
 python3 makepdf.py
